@@ -25,7 +25,7 @@ import vibe.aws.sigv4;
 import std.math;
 
 import memutils.all;
-import kxml.xml;
+import arsd.dom;
 
 public import vibe.aws.credentials;
 
@@ -353,7 +353,7 @@ abstract class RESTClient {
         return resp;
     }
 
-    XmlNode readXML(HTTPClientResponse response)
+    Document readXML(HTTPClientResponse response)
     {
         auto stringBuilder = appender!string;
         auto reader = response.bodyReader;
@@ -369,7 +369,7 @@ abstract class RESTClient {
             reader.read(bytes);
             stringBuilder.put(bytes);
         }
-        return readDocument(stringBuilder.data,true);
+        return new Document(stringBuilder.data);
     }
 
     void checkForError(HTTPClientResponse response, string file = __FILE__, size_t line = __LINE__, Throwable next = null)
@@ -378,8 +378,8 @@ abstract class RESTClient {
             return; // No error
 
         auto document = readXML(response);
-        auto code = document.parseXPath("/Error/Code")[0].getCData;
-        auto message = document.parseXPath("/Error/Message")[0].getCData;
+        auto code = document.querySelector("Error Code").innerText;
+        auto message = document.querySelector("Error Message").innerText;
         logError(message);
         throw makeException(code, response.statusCode / 100 == 5, message, file, line, next);
     }

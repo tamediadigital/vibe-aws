@@ -190,38 +190,38 @@ class S3 : RESTClient
         resp.destroy();
 
         BucketListResult result;
-        result.name = response.parseXPath("/ListBucketResult/Name")[0].getCData;
-        result.prefix = response.parseXPath("/ListBucketResult/Prefix")[0].getCData;
-        result.marker = response.parseXPath("/ListBucketResult/Marker")[0].getCData;
-        result.maxKeys = response.parseXPath("/ListBucketResult/MaxKeys")[0].getCData.to!uint;
-        result.isTruncated = response.parseXPath("/ListBucketResult/IsTruncated")[0].getCData.toLower.to!bool;
+        result.name = response.querySelector("ListBucketResult Name").innerText;
+        result.prefix = response.querySelector("ListBucketResult Prefix").innerText;
+        result.marker = response.querySelector("ListBucketResult Marker").innerText;
+        result.maxKeys = response.querySelector("ListBucketResult MaxKeys").innerText.to!uint;
+        result.isTruncated = response.querySelector("ListBucketResult IsTruncated").innerText.toLower.to!bool;
 
         if (result.isTruncated)
-            result.nextMarker = response.parseXPath("/ListBucketResult/NextMarker")[0].getCData;
+            result.nextMarker = response.querySelector("ListBucketResult NextMarker").innerText;
 
-        auto entries = response.parseXPath("/ListBucketResult/Contents");
+        auto entries = response.querySelector("ListBucketResult Contents");
 
         result.resources.reserve = 1000;
-        foreach(node; entries)
+        foreach(node; entries.children)
         {
             BucketListResult.S3Resource entry;
             BucketListResult.S3Resource.Owner owner;
 
-            entry.key = node.parseXPath("Key")[0].getCData;
-            entry.lastModfied = node.parseXPath("LastModified")[0].getCData;
-            entry.etag = node.parseXPath("ETag")[0].getCData;
-            entry.size = node.parseXPath("Size")[0].getCData.to!ulong;
+            entry.key = node.querySelector("Key").innerText;
+            entry.lastModfied = node.querySelector("LastModified").innerText;
+            entry.etag = node.querySelector("ETag").innerText;
+            entry.size = node.querySelector("Size").innerText.to!ulong;
             import std.conv;
-            entry.storageClass = node.parseXPath("StorageClass")[0].getCData.to!StorageClass;
+            entry.storageClass = node.querySelector("StorageClass")[0].innerText.to!StorageClass;
 
             result.resources.assumeSafeAppend ~= entry;
         }
         result.resources.reserve = result.resources.length;
 
         result.commonPrefixes.reserve = 1000;
-        entries = response.parseXPath("/ListBucketResult/CommonPrefixes/Prefix");
-        foreach(node; entries)
-            result.commonPrefixes.assumeSafeAppend ~= node.getCData;
+        auto prefixes = response.querySelectorAll("ListBucketResult CommonPrefixes Prefix");
+        foreach(node; prefixes)
+            result.commonPrefixes.assumeSafeAppend ~= node.innerText;
         result.commonPrefixes.reserve = result.commonPrefixes.length;
 
         return result;
@@ -354,7 +354,7 @@ class S3 : RESTClient
             httpResp.destroy();
         }
         auto document = readXML(httpResp);
-        auto id = document.parseXPath("/InitiateMultipartUploadResult/UploadId")[0].getCData;
+        auto id = document.querySelector("InitiateMultipartUploadResult UploadId").innerText;
         return id;
     }
 

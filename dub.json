@@ -7,7 +7,7 @@
 	"targetType": "library",
 	"dependencies": {
 		"vibe-d": "~>0.8.0",
-		"kxml": "~>1.0.1",
+		"arsd-official:dom": "~>2.0.0",
 		"memutils": "~>0.4.7"
 	},
 	"subConfigurations": {
